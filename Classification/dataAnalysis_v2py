@@ -1,0 +1,56 @@
+import os
+import numpy as np
+from matplotlib import pyplot as plt
+import pandas as pd
+
+def class clean_data(filename, outputname, outputBool):
+	# get current working directory
+	path = os.getcwd()
+	# get all files in cwd
+	files = os.listdir(path)
+	# serach filenames and get all xlsx extensions
+	# files_xlsx = [f for f in files if f[-4:] == 'xlsx']
+
+	#output order of files to txt file
+	# j = 0
+	# with open('fileOrder.txt','a') as out:
+	# 	for f in files_xlsx:
+	# 		out.write(str(j)+":  "+f+"\r\n")
+	# 		j = j + 1
+
+	# construct array for dataframes
+	data = {}
+	i = 0
+	# add data to df
+	f = "Bad.xlsx"
+	# construct pd dataframe
+	data = pd.DataFrame()
+	sheetName = "Sheet1"
+	data = pd.read_excel(f, sheetName)
+	# print(data.loc[0, 3])
+	# for i in data.shape[0]:
+
+	#removes the first 3 zeroed values all blank columns
+	a = np.arange(1,data.shape[1]+1,1)
+	b = np.arange(2,data.shape[1],3)
+	index = np.delete(a,b)
+
+	#save the data to a new xlsx file
+	cleanData = data.loc[3::, index]
+	x = cleanData.shape[0]
+	xlabel = np.arange(x)
+	# cleanData = cleanData.set_index(xlabel)
+	# cleanDate = cleanData.reindex(columns=ylabel)
+	cleanData = cleanData.reset_index(drop = True)
+	y = cleanData.shape[1]
+	ylabel = np.arange(y)
+	cleanData.columns = ylabel
+	# print(cleanData)
+	# cleanData.to_excel('/Users/robertshi/Desktop/S\'19/Invictis/data_analysis/Classification/cleanGoodData.xlsx', sheet_name = 'Sheet1')
+	c = np.arange(0,cleanData.shape[1]+1,2)
+	x = cleanData.loc[:,c]
+	x.columns = np.arange(x.shape[1])
+	y = cleanData.loc[:,c+1]
+	y.columns = np.arange(y.shape[1])
+
+
