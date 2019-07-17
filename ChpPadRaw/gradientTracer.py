@@ -133,9 +133,9 @@ class gradientTracer:
 		# be sure to rename any important previous runs
 		print("Finished. Moving to Excel File")
 		outputname = "thresholds.xlsx"
-		filepath = '/Users/robertshi/Desktop/S\'19/Invictis/data_analysis/ChpPadRaw/DataOutput/' + dataFolder+'_' + outputname
+		filepath = '/Users/<<Insert path here>>/INVICTIS/ChpPadRaw/DataOutput/' + dataFolder+'_' + outputname
 		self.possThreshList.to_excel(filepath, sheet_name = 'Sheet1')
 
 		outputname = "distance.xlsx"
-		filepath = '/Users/robertshi/Desktop/S\'19/Invictis/data_analysis/ChpPadRaw/DataOutput/' + dataFolder +'_'+ outputname
+		filepath = '/Users/<<Insert Path here>>/INVICTIS/ChpPadRaw/DataOutput/' + dataFolder +'_'+ outputname
 		self.distance.to_excel(filepath, sheet_name = 'Sheet1')
