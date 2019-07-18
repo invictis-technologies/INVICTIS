@@ -1,21 +1,17 @@
-import serial
-import time
-from nanpy import SerialManager
-from nanpy import ArduinoApi
+from nanpy import SerialManager # Manages serial connections to arduino
+from nanpy import ArduinoApi # Handles commands sent to arduino
 
 # TODO: Actually test code on arduino and fix bugs that arise there
-# TODO: Implement reset/go button and tricolor status led
 
 class ARDUINO():
     def __init__(self, serialConnection):
         # string used to specify which serial connection is controlling the arduino
         self.serialConnection = serialConnection 
-        self.statusLed(0, 0, 0)
 
     '''
     Queries pin 7 and 8 on an Arduino for an HC-SR04 ultrasonic distance 
     monitor and returns the distance to an object from that monitor in mm.
-    If no arduino is found, the function will pass and return -1. 
+    If no arduino is found, the function will raise an IOError 
     while printing an error message to stdOut. The function
     does not check that the sensor is connected. Pass it the string
     serialConnection (example '/dev/ttyACM0')
@@ -25,8 +21,12 @@ class ARDUINO():
         ECHO_PIN = 7
         TRIG_PIN = 8
 
-        connected, a = self.connect(self)
-        if(connected):
+        # is the arduino connected?
+        try:
+            a = self.connect(self)
+        except:
+            raise
+        else:
             # Initialize the arduino pins
             a.pinMode(TRIG_PIN, a.OUTPUT)
             a.pinMode(ECHO_PIN, a.INPUT)
@@ -48,15 +48,13 @@ class ARDUINO():
             #Conversion rate brought to you by the speed of sound
             mm = (duration*.343)/2
             return mm
-        else:
-            return -1
 
     '''
     Queries pins A2 and A4 and takes the difference to 
     catch the force data being returned by the force sensor shown in the
     link below. Takes in a string serialConnection
     such as '/dev/ttyACM0'. Returns the difference if possible or
-    zero if the connection failed. The force is then a ratio of 
+    returns -1 if not. The force is then a ratio of 
     the difference with the inputted voltage.
     '''
     def getForce(self): 
@@ -64,37 +62,40 @@ class ARDUINO():
         A2 = 16
         A4 = 18
 
-        # https://www.mouser.com/datasheet/2/187/honeywell-sensing-force-sensors-FSG-product-sheet--1132419.pdf
-        connected, a = self.connect(self)
-        if(connected):
+        # Is the arduino connected?
+        try:
+            a = self.connect(self)
+        except:
+            return -1
+        else:
             # Initialize the arduino pins to read
             pos = a.analogRead(A2)
             neg = a.analogRead(A4)
 
-            diff = pos - neg
-        else:
-            diff = 0
-
-        return diff
+            diff = pos - neg # https://www.mouser.com/datasheet/2/187/honeywell-sensing-force-sensors-FSG-product-sheet--1132419.pdf
+            return diff
 
     # Runs an infinite loop waiting for a button press  on pin 3 
     # to break the loop.
     # Takes in nothing returns nothing but will raise an IOerror if
     # the connection can not be made
-    def buttonPress(self):
+    def waitForButtonPress(self):
         buttonPin = 3
 
-        connected, a = self.connect(self)
-        if (connected):
+        # is the arduino connected?
+        try:
+            a = self.connect(self)
+        except:
+            raise
+        else:
             while(a.digitalRead(buttonPin) == a.HIGH):
                 pass
-        else:
-            print("Hardware not connected to sensor module")
-            raise IOError
 
     # Sets a tricolor status led. 
     # Values must be within 0 and 255
-    def statusLed(self, R, G, B):
+    # Takes in 3 numerical values and returns nothing
+    # Can raise an IOError if the connecion fails
+    def statusLED(self, R, G, B):
         redPin= 11
         greenPin = 10
         bluePin = 9
@@ -109,20 +110,21 @@ class ARDUINO():
         if B > 255: B = 255
         else: 
             if B < 0: R = 0
-
-        connected, a = self.connect(self)
-        if (connected):
+        
+        # is it connected?
+        try:
+            a = self.connect(self)
+        except:
+            raise
+        else:
             a.analogWrite(redPin, R)
             a.analogWrite(greenPin, G)
-            a.analogWrite(bluePin, B)
-        else:
-            print("Hardware not connected to sensor module")
-            raise IOError    
+            a.analogWrite(bluePin, B)   
 
     '''
      A static method to connect to an Arduino. Pass it a string serialConnection
-     with such as '/dev/ttyACM0'. Returns False if connection is 
-     not possible and True if it is.
+     with such as '/dev/ttyACM0'. Raises an IOError if a connection is 
+     not possible or returns an arduinoapi object
     ''' 
     @staticmethod
     def connect(self):
@@ -130,7 +132,7 @@ class ARDUINO():
             # Set up serial connection
             connection = SerialManager(device = serialConnection)
             a = ArduinoApi(connection = connection)
-            return True, a
+            return a
         except:
             print("The Arduino is currently not connected to port: " + self.serialConnection)
-            return False, None
+            raise IOError

@@ -1,4 +1,4 @@
-from picamera import PiCamera
+from picamera import PiCamera # used to run rpi camera
 import pathlib # used to find deprecated image files
 import os # used to delete deprecated image files
 
@@ -59,13 +59,14 @@ class irCamera():
     # as a png file named filename where filename is some string. Nothing is returned.
     def capture(self, filename):
         filepath = filename + '.png'
-        path = pathlib.Path(filepath)
 
         # Delete the old vein data
-        if path.exists():
-            os.remove(filename + filepath)
-        
-        self.ircamera.capture(filename, format = 'png', use_video_port = False, resize = (400,300))
+        try:
+            os.remove(filepath)
+        except OSError:
+            pass
+        finally:
+            self.ircamera.capture(filename, format = 'png', use_video_port = False, resize = (400,300))
 
     # Finalizes the state of the camera to prevent GPU memory leaks
     # Takes in nothing and returns nothing

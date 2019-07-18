@@ -1,7 +1,9 @@
-from time import sleep
-from irCamera import irCamera
+from time import sleep # Allows use of sleep command
+from irCamera import irCamera # Manipulates camera object
+from exceptions import OutofBoundsError # Custom-defined exceptions module
+from exceptions import InvalidResponseError # Custom-defined exceptions module
 import serial
-import imageProcessor as imgProc
+
 
 # TODO: figure out the bounds for the move function
 
@@ -13,6 +15,8 @@ class VITA():
         self.ser = serial.Serial(serialConnection) 
         # sets the communication rate for the serial port with the device.
         self.ser.baudrate = baud
+        # Used for error handling
+        self.serialConnection = serialConnection
 
     # Wrapper method to write data to the serial port
     # Data must be of the form "G28 X Y\r\n" where the gcode 
@@ -27,22 +31,28 @@ class VITA():
     # stdout. Returns nothing
     def move(self, x, y, z, f):
         #to change in future
-        xBound = 100
-        yBound = 100
-        zBound = 10
+        XBOUND = 100
+        YBOUND = 100
+        ZBOUND = 10
+        FBOUND = 2500
 
-        if abs(x) <= xBound or abs(y) <= yBound or abs(z) <= zBound:
+        if abs(x) <= XBOUND and abs(y) <= YBOUND and abs(z) <= ZBOUND and f<= FBOUND :
             cmdRelative = "G91 \r\n"
             cmdMove = "G1 X" + str(x) + " Y" + str(y) + " Z" + str(z) + " F" + str(f) + "\r\n"
             self.write(cmdRelative)
-            self.isOk()
+            try: 
+                self.isOk()
+            except: 
+                raise
             sleep(0.2)
             self.write(cmdMove)
-            self.isOk()
+            try: 
+                self.isOk()
+            except: 
+                raise
             sleep((max([abs(x), abs(y), abs(z)])*60*1/f*1.2))
         else:
-            print("The attempted movement was out of bounds.")
-            self.terminate()
+            raise OutofBoundsError("The attempted movement was out of bounds.")
 
     # Checks the printer status. Should be run after each printer write command.
     # Takes in nothing and returns nothing. Prints messages to stdOut if errors 
@@ -50,41 +60,35 @@ class VITA():
     def isOk(self):
         if self.ser.is_open():
             response = self.ser.readline()
-            print(response)
             if response == b"ok\n":
-                return True
-            print("printer error. things not okay! t('_'t)")
+                return
+            raise InvalidResponseError("Unexpected response from device. Received: " + response)
         else:
-            print("serial port /dev/ttyUSB0 not open")
-        self.terminate()
+            raise ConnectionError("Serial port is not available. Tried to connect to: " + self.serialConnection)
 
     # Ends the program and cleans up utilized resources.
     # Takes nothing and returns nothing
     def terminate(self):
         self.camera.stop_preview()
         self.camera.close()
-        imgProc.closeWindows()
         self.ser.close()
-        exit()
 
     # Wrapper class that takes photos using an attached camera
     # and saves them to the a filename at string filename. Returns nothing
     def capture(self, filename):
-        try:
-            self.camera.capture(filename)
-        except:
-            print("The image capture failed.")
-            self.terminate()
+        self.camera.capture(filename)
 
-    # Physically device bed the printer for use.
+    # Physically center the device bed of the printer for use.
     # Takes nothing and returns nothing
     def initialize(self):
         # reset x and y with a homing command
         self.write("G28 X Y\r\n")
         sleep(5)
-        self.isOk()
-
-        # center platform
-        self.move(110, 60, 0, 2500)
-
+        try:
+            self.isOk()
+        except:
+            raise
+        else:
+            # center platform
+            self.move(110, 60, 0, 2500)
         

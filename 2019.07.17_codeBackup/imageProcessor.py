@@ -43,8 +43,7 @@ def isValidImg(filename):
     if fileExtension is None:
         print(filename + " is not a readable image.") 
         closeWindows()
-        return False
-    return True
+        raise ValueError('File is not a readable image')
 
 # Wrapper function to close openCV outside of this scope in case of errors.
 # It takes nothing and returns nothing
