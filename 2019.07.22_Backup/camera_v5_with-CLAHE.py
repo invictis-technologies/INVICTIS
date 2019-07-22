@@ -2,7 +2,7 @@ from VITA_PRINTER import VITA # Controls the device and the camera
 import imageProcessor as imgProc # Runs the vein finding
 from exceptions import OutofBoundsError # Custom-defined exceptions module
 from exceptions import InvalidResponseError # Custom-defined exceptions module
-import sys # Used to cmd line arguments
+import sys # Used to activate demo mode
 from time import sleep # used to signal catastrophic failure
     
 # TODO: Make the currently unrecoverable errors that terminate the program recoverable
@@ -17,7 +17,7 @@ def veinImaging(filename, device):
     try:
         height = device.getDistance()
     except IOError:
-        closeProgram(device)1
+        closeProgram(device)
     else:
         device.capture(filename)
         # is the image readable?
