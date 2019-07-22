@@ -17,7 +17,7 @@ def veinImaging(filename, device):
     try:
         height = device.getDistance()
     except IOError:
-        closeProgram(device)1
+        closeProgram(device)
     else:
         device.capture(filename)
         # is the image readable?
