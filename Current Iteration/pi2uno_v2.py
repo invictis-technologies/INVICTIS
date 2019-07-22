@@ -9,12 +9,12 @@ class ARDUINO():
         self.serialConnection = serialConnection 
 
     '''
-    Queries pin 7 and 8 on an Arduino for an HC-SR04 ultrasonic distance 
-    monitor and returns the distance to an object from that monitor in mm.
-    If no arduino is found, the function will raise an IOError 
-    while printing an error message to stdOut. The function
-    does not check that the sensor is connected. Pass it the string
-    serialConnection (example '/dev/ttyACM0')
+     Queries pin 7 and 8 on an Arduino for an HC-SR04 ultrasonic distance 
+     monitor and returns the distance to an object from that monitor in mm.
+     If no arduino is found, the function will raise an IOError 
+     while printing an error message to stdOut. The function
+     does not check that the sensor is connected. Pass it the string
+     serialConnection (example '/dev/ttyACM0')
     '''
     def getDistance(self):
         # Distance sensor pins (physically labelled on ARDUINO)
@@ -50,12 +50,12 @@ class ARDUINO():
             return mm
 
     '''
-    Queries pins A2 and A4 and takes the difference to 
-    catch the force data being returned by the force sensor shown in the
-    link below. Takes in a string serialConnection
-    such as '/dev/ttyACM0'. Returns the difference if possible or
-    returns -1 if not. The force is then a ratio of 
-    the difference with the inputted voltage.
+     Queries pins A2 and A4 and takes the difference to 
+     catch the force data being returned by the force sensor shown in the
+     link below. Takes in a string serialConnection
+     such as '/dev/ttyACM0'. Returns the difference if possible or
+     returns -1 if not. The force is then a ratio of 
+     the difference with the inputted voltage.
     '''
     def getForce(self): 
         # properly set arduino pins to known names
@@ -75,10 +75,12 @@ class ARDUINO():
             diff = pos - neg # https://www.mouser.com/datasheet/2/187/honeywell-sensing-force-sensors-FSG-product-sheet--1132419.pdf
             return diff
 
-    # Runs an infinite loop waiting for a button press  on pin 3 
-    # to break the loop.
-    # Takes in nothing returns nothing but will raise an IOerror if
-    # the connection can not be made
+    '''
+     Runs an infinite loop waiting for a button press  on pin 3 
+     to break the loop.
+     Takes in nothing returns nothing but will raise an IOerror if
+     the connection can not be made
+    '''
     def waitForButtonPress(self):
         buttonPin = 3
 
@@ -91,10 +93,12 @@ class ARDUINO():
             while(a.digitalRead(buttonPin) == a.HIGH):
                 pass
 
-    # Sets a tricolor status led. 
-    # Values must be within 0 and 255
-    # Takes in 3 numerical values and returns nothing
-    # Can raise an IOError if the connecion fails
+    '''
+     Sets a tricolor status led. 
+     Values must be within 0 and 255
+     Takes in 3 numerical values and returns nothing
+     Can raise an IOError if the connecion fails
+    '''
     def statusLED(self, R, G, B):
         redPin= 11
         greenPin = 10

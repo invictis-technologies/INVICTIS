@@ -9,9 +9,11 @@ from time import sleep # used to signal catastrophic failure
 # TODO: implement DEMO mode with live viewing
 # TODO: implement inVeins() force sensing
 
-# Finds veins and presents their location.
-# It takes in a string filename and a VITA object device,
-# and returns x and y as distances.
+'''
+ Finds veins and presents their location.
+ It takes in a string filename and a VITA object device,
+ and returns x and y as distances.
+'''
 def veinImaging(filename, device):
     # Is the sensor connected?
     try:
@@ -26,27 +28,31 @@ def veinImaging(filename, device):
         except ValueError:
             closeProgram(device)
         else:
-            imgProc.preprocess(filename)
+            img = imgProc.preprocess(filename)
 
-            x,y = imgProc.getVeins(filename, height)
+            x,y = imgProc.getVeins(img, height)
 
             return x, y
 
 def inVeins(force, distanceDown):
         return None
 
-# Takes in a Vita object and 
-# finalizes the state of the program for a safe
-# shutdown and release of all resources. 
+'''
+ Takes in a Vita object and 
+ finalizes the state of the program for a safe
+ shutdown and release of all resources. 
+'''
 def closeProgram(device):
     imgProc.closeWindows()
     device.terminate()
     raise SystemExit(0)
 
-# Parses the command line options to set a string filename and activate
-# demo mode with th '-D' option which shows the images. By default, if no 
-# options are given demo mode is off and the images are saved to veins.png 
-# in the current directory. Returns the string filename and boolean DEMO
+'''
+ Parses the command line options to set a string filename and activate
+ demo mode with th '-D' option which shows the images. By default, if no 
+ options are given demo mode is off and the images are saved to veins.png 
+ in the current directory. Returns the string filename and boolean DEMO
+'''
 def getOptions():
     DEMO = False
     filename = 'veins'
@@ -78,7 +84,7 @@ def main():
     while (x != 0 and y != 0):
         x, y = veinImaging(filename, device)
         try:
-            device.move(x, y, 0, SPEED)
+            device.move(x, y, SPEED)
         except:
             closeProgram(device)
 
@@ -86,27 +92,31 @@ def main():
     R = 0; G = 0; B = 255 # Blue
     device.statusLED(R,G,B)
 
-    distanceDown = 0 #mm
-    z = -1 # mm
-
     force = device.getForce()
     if (force == -1): # check that the force sensor is functioning
         print("Force sensor not connected. Injection Failed")
         closeProgram(device)
     else:
-        while(not inVeins(force, distanceDown)):
-            try:
-                device.move(0,0,z,SPEED)
-            except:
-                device.retractNeedle()
-                closeProgram(device)
-            distanceDown += abs(z)
+        try:
+            moveCMD = device.descend(SPEED)
+        except:
+            device.stopZ(moveCMD)
+            device.retractNeedle()
+            closeProgram(device)
 
+        force = device.getForce()
+        distanceDown = device.getDistance
+
+        while(not inVeins(force, distanceDown)):
             force = device.getForce()
+            distanceDown = device.getDistance
             if (force == -1): # check that the force sensor is functioning
                 print("Force sensor not connected. Injection Failed")
+                device.stopZ(moveCMD)
                 device.retractNeedle()
                 closeProgram(device)
+        else:
+            device.stopZ(moveCMD)
         
         device.waitForButtonPress() # will loop infinitely until button is pressed
 
