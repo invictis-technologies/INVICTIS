@@ -68,7 +68,15 @@ import pandas as pd
 # b = [1, 7, 34, 23,234]
 # print(np.argwhere(np.isin(b,a)))
 
-df = pd.DataFrame({'B': [0, 1, 2,3,5, None, 4]})
-y = df.rolling(3,center = True).mean()
-print(y)
-print(np.where(y == np.amax(y)))
+# df = pd.DataFrame({'B': [0, 1, 2,3,5, None, 4]})
+# y = df.rolling(3,center = True).mean()
+# print(y)
+# print(np.where(y == np.amax(y)))
+# print([1:5])
+# a = np.array([1,2,3,4,5,6])
+# print(a[1:5])
+# print(np.argwhere(a[1:5] > 3))
+
+a = np.array([1,-1,2,-2,3,-3,4,5,6])
+a = a[a>0]
+print(a)

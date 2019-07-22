@@ -9,11 +9,12 @@ import pandas as pd
 # following suggestions by:
 # https://pdfs.semanticscholar.org/f8d1/076676696cfdc055e68d2b829333dac08105.pdf
 # ================================================================
-samplePathLength = 250
+samplePathLength = 400
+numPaths = 50
 # 
 # ================================================================
 # read image into cv2 format
-img = cv2.imread('CLAHE_ENHANCED_veinImage_6_cl2_gs8.png')
+img = cv2.imread('CLAHE_ENHANCED_veinImage_9_cl5_gs16.png')
 # saves the shape of the image so we can create numpy arrays of the same shape for data visualization
 img_shape = img.shape
 x_len = img_shape[1]
@@ -49,7 +50,7 @@ contours, hierarchy = cv2.findContours(opening,cv2.RETR_EXTERNAL,cv2.CHAIN_APPRO
 # holds contours in loop
 contourCheck = np.zeros((y_len, x_len,1),np.uint8)
 # holds the best midpoint and distance in every contour
-bestBois = pd.DataFrame()
+dbOfOptimalLocations = pd.DataFrame()
 # only show really big contours, none of that puny sh*t
 for contour in contours:
 	# only process large contours. Feel free to adjust the contour area threshold
@@ -138,8 +139,8 @@ for contour in contours:
 		rBoxCoords = tuple(box[rightBoxCornerIndex])
 		cv2.line(blank_canvas, lBoxCoords, rBoxCoords,color = (0,0,255),thickness= 1)
 		# Set the start points of the search paths using a linear space
-		pointsx =  np.linspace(lBoxCoords[0],rBoxCoords[0],200)
-		pointsy = np.linspace(lBoxCoords[1],rBoxCoords[1],200)
+		pointsx =  np.linspace(lBoxCoords[0],rBoxCoords[0],numPaths)
+		pointsy = np.linspace(lBoxCoords[1],rBoxCoords[1],numPaths)
 		# drop search paths
 		for i in range(len(pointsx)):
 		# for i in [10,11,12,13]:
@@ -149,7 +150,9 @@ for contour in contours:
 			y,x = lines.bresenham_combine(pointsx[i],pointsy[i],*perp, img_shape[0],img_shape[1])
 			# limit search lines to 450 pixels(Will need to change if resoltution changes)
 			# Feel free to update.
+			blank_canvas[y[range(samplePathLength)],x[range(samplePathLength)]] = (0,255,0)
 			searchLine = np.array((y[0:samplePathLength],x[0:samplePathLength])).T
+			print(y[0:samplePathLength])
 			listCoords = list(zip(x,y))
 			intersections = np.empty(0)
 			# goes down the search path and checks if the point is on the contour boundary
@@ -162,7 +165,6 @@ for contour in contours:
 				if dist == 0:
 					cv2.circle(blank_canvas, listCoords[j], 15, (0,0,255), -1)
 					intersections = np.append(intersections,listCoords[j], axis = 0)
-			blank_canvas[y[0:samplePathLength],x[0:samplePathLength]] = (0,255,0)
 			# if there are not two intersections, assume the datapoint is bad and disregard neighboring points
 			if intersections.shape[0] != 4:
 				midpoint = (np.nan,np.nan)
@@ -184,21 +186,21 @@ for contour in contours:
 		# find the largest windowed distance of the contour and store the points and distance in a larger array
 		# print(mdpt_dist.shape)
 		windowed = mdpt_dist[1].rolling(10,center = True).mean()
-		print(windowed)
+		# print(windowed)
 			# print(breaks)
-		goodBoiIndex = np.where(windowed == np.amax(windowed))
-		goodBoi = mdpt_dist.iloc[goodBoiIndex]
-		bestBois = bestBois.append(goodBoi, ignore_index=True)
-print(bestBois)
-goodestBestBoyIndex = np.where(bestBois == np.amax(bestBois.loc[:,1]))[0]
-goodestBestBoy = bestBois.iloc[goodestBestBoyIndex][0]
+		maxWidthInContourIndex = np.where(windowed == np.amax(windowed))
+		optimalLocationInContour = mdpt_dist.iloc[maxWidthInContourIndex]
+		dbOfOptimalLocations = dbOfOptimalLocations.append(optimalLocationInContour, ignore_index=True)
+print(dbOfOptimalLocations)
+optimalLocationIndex = np.where(dbOfOptimalLocations == np.amax(dbOfOptimalLocations.loc[:,1]))[0]
+optimalLocation = dbOfOptimalLocations.iloc[optimalLocationIndex][0]
 print("who's a good boyo")
-if goodestBestBoy.shape[0] == 0:
+if optimalLocation.shape[0] == 0:
 	exit("No Locations Detected")
-goodestBestBoy = goodestBestBoy.reset_index(drop = True)
-print(goodestBestBoy)
-cv2.circle(blank_canvas, goodestBestBoy[0], 25, (255,0,255), -1)
-# print(bestBois)
+optimalLocation = optimalLocation.reset_index(drop = True)
+print(optimalLocation)
+cv2.circle(blank_canvas, optimalLocation[0], 25, (255,0,255), -1)
+# print(dbOfOptimalLocations)
 # thin = thin(blank_canvas)
 # # plot results
 # # original image
